@@ -1,0 +1,2 @@
+gkeepapi>=0.17.1
+twilio>=9.11.0

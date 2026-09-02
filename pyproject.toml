@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keep-sms-cron"
+version = "0.1.0"
+description = "Linux cron job that sends SMS notifications for new Google Keep notes."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Eji Keme Udechukwu" }]
+dependencies = [
+  "gkeepapi>=0.17.1",
+  "twilio>=9.11.0",
+]
+
+[project.scripts]
+keep-sms-cron = "keep_sms_cron.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
