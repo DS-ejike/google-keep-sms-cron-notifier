@@ -12,6 +12,38 @@ This project is designed as a portfolio-ready Linux automation example. It demon
 - Stores local state so the same note is not reported repeatedly.
 - Supports a mock backend for demos and tests without using real credentials.
 
+## Architecture
+
+```mermaid
+flowchart TD
+  cron[Linux cron] --> runner[run_keep_sms_notifier.sh]
+  runner --> lock{flock available?}
+  lock -->|yes| locked[Acquire non-blocking lock]
+  lock -->|no| app
+  locked --> app[Python CLI: keep_sms_cron --once]
+
+  app --> config[Load .env and validate configuration]
+  app --> state[(Local JSON state file)]
+  app --> keep{Keep backend}
+  keep -->|mock| mock[Read notes JSON file]
+  keep -->|gkeepapi| google[Google Keep]
+  mock --> notes[Fetch and filter notes]
+  google --> notes
+
+  notes --> compare{New note ID?}
+  compare -->|no| save[Update seen note IDs]
+  compare -->|yes| message[Build notification message]
+  message --> sms{SMS mode}
+  sms -->|dry run| log[Log SMS without sending]
+  sms -->|Twilio| twilio[Twilio SMS API]
+  log --> save
+  twilio --> save
+  save --> state
+  app --> logs[(Cron log file)]
+```
+
+Each cron invocation runs one polling cycle. The state file records seen and notified note IDs, so subsequent runs only send alerts for newly discovered notes.
+
 ## Important Google Keep Note
 
 Google Keep has an official API, but Google describes it as intended for Workspace enterprise environments. For personal Google Keep accounts, this project supports the unofficial `gkeepapi` Python library. That means the Google Keep integration is useful for a homelab or portfolio automation, but it should be treated carefully and tested against your own account before relying on it for critical workflows.
